@@ -28,6 +28,8 @@ if __name__ == '__main__':
         exit(1)
 
     for filename in os.listdir('./cogs'):
+        if "BaseCog" in filename:
+            continue
         if filename.endswith('.py'):
             bot.load_extension(f'cogs.{filename[:-3]}')
 

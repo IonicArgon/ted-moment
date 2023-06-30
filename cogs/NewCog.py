@@ -1,43 +1,32 @@
-import csv
 import datetime
-import logging
 import secrets
 import discord
+import string
 from discord.ext import commands
+from cogs.BaseCog import BaseCog
 
-class NewCog(commands.Cog):
-    def __init__(self, bot: commands.Bot):
-        self.bot = bot
-        self.event_log = 'event_log.csv'
-
-    @commands.Cog.listener()
-    async def on_ready(self):
-        logging.info('NewCog ready')
+class NewCog(BaseCog):
+    def __init__(self, bot: commands.Bot) -> None:
+        super().__init__(bot)
 
     @commands.slash_command(name='new', description='Create a new incident.')
     async def new(
-        self, 
-        ctx: commands.Context, 
+        self,
+        ctx: commands.Context,
         name: discord.Option(
-            str,
+            str, 
             description='Name of the incident.',
             required=True),
         description: discord.Option(
-            str,
+            str, 
             description='Description of the incident.',
             required=True),
         date: discord.Option(
-            str,
-            description='Date of the incident. Format: YYYY-MM-DD. Defaults to today.',
-            required=False,
-        default=None)):
-        embed = discord.Embed(
-            title='ted incident tracker | adding new incident',
-            color=discord.Color.blue())
-        embed.set_footer(
-            text='Bot created by .extro',
-            icon_url='https://cdn.discordapp.com/avatars/244948020569964545/553692a2ef6f042857754748630170f5?size=1024'
-        )
+            str, 
+            description='Date of the incident. Format: `YYYY-MM-DD`. Defaults to today.',
+            required=False)) -> None:
+        embed = self.base_embed.copy()
+        embed.title += 'new'
 
         if date is None:
             date = datetime.date.today().strftime('%Y-%m-%d')
@@ -50,13 +39,18 @@ class NewCog(commands.Cog):
                 await ctx.respond(embed=embed)
                 return
             
-        with open(self.event_log, 'a', newline='') as csvfile:
-            writer = csv.writer(csvfile)
-            event_id = ''.join(secrets.choice('0123456789ABCDEF') for i in range(6))
-            writer.writerow([date, name, description, event_id])
+        event_id = ''.join(secrets.choice(string.ascii_lowercase + string.digits) for i in range(6))
+        view_counter = 0
+        bruh_counter = 0
+        rizz_counter = 0
+        await self._append_incident([date, name, description, event_id, view_counter, bruh_counter, rizz_counter])
 
-        embed.description = f'New incident added: `{name}`.'
+        embed.description = f'New incident added.'
+        embed.add_field(name='Name', value=f'`{name}`', inline=True)
+        embed.add_field(name='Date', value=f'`{date}`', inline=True)
+        embed.add_field(name='Event ID', value=f'`{event_id}`', inline=True)
+        embed.add_field(name='Description', value=description, inline=False)
         await ctx.respond(embed=embed)
 
-def setup(bot: commands.Bot):
+def setup(bot: commands.Bot) -> None:
     bot.add_cog(NewCog(bot))
